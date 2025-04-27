@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MNIST Digit Recognition</title>
+    <title>MNIST Multi-Digit Recognition</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,11 +16,19 @@
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+        }
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
         }
         canvas {
             border: 2px solid #333;
             border-radius: 5px;
             margin: 10px;
+            background-color: white;
         }
         .buttons {
             margin: 10px;
@@ -43,24 +51,48 @@
             padding: 10px;
             border-radius: 5px;
             background-color: #e9ecef;
+            min-height: 50px;
+            text-align: center;
+        }
+        .digit-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 10px;
+        }
+        .digit-box {
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .digit-box img {
+            max-width: 28px;
+            max-height: 28px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Draw a Digit (0-9)</h1>
-        <canvas id="drawingCanvas" width="280" height="280"></canvas>
-        <div class="buttons">
-            <button onclick="clearCanvas()">Clear</button>
-            <button onclick="predict()">Predict</button>
+        <h1>Draw Multiple Digits (0-9)</h1>
+        <div class="canvas-container">
+            <canvas id="drawingCanvas" width="560" height="280"></canvas>
+            <div class="buttons">
+                <button onclick="clearCanvas()">Clear</button>
+                <button onclick="predict()">Predict</button>
+            </div>
         </div>
         <div id="prediction"></div>
+        <div id="digitBoxes" class="digit-container"></div>
     </div>
 
     <script>
         const canvas = document.getElementById('drawingCanvas');
         const ctx = canvas.getContext('2d');
         let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
 
         // Set up the canvas
         ctx.lineWidth = 20;
@@ -74,10 +106,28 @@
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('touchstart', handleTouch);
+        canvas.addEventListener('touchmove', handleTouch);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(
+                e.type === 'touchstart' ? 'mousedown' : 'mousemove',
+                {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                }
+            );
+            canvas.dispatchEvent(mouseEvent);
+        }
 
         function startDrawing(e) {
             isDrawing = true;
-            draw(e);
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
         }
 
         function draw(e) {
@@ -87,9 +137,12 @@
             const y = e.clientY - rect.top;
 
             ctx.beginPath();
-            ctx.moveTo(x, y);
+            ctx.moveTo(lastX, lastY);
             ctx.lineTo(x, y);
             ctx.stroke();
+
+            lastX = x;
+            lastY = y;
         }
 
         function stopDrawing() {
@@ -100,6 +153,7 @@
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             document.getElementById('prediction').textContent = '';
+            document.getElementById('digitBoxes').innerHTML = '';
         }
 
         function predict() {
@@ -116,7 +170,21 @@
                 if (data.error) {
                     document.getElementById('prediction').textContent = 'Error: ' + data.error;
                 } else {
-                    document.getElementById('prediction').textContent = 'Predicted Digit: ' + data.prediction;
+                    const predictions = data.predictions;
+                    document.getElementById('prediction').textContent = 'Predicted Digits: ' + predictions.join(' ');
+                    
+                    // Display individual digit boxes
+                    const digitBoxes = document.getElementById('digitBoxes');
+                    digitBoxes.innerHTML = '';
+                    predictions.forEach((digit, index) => {
+                        const box = document.createElement('div');
+                        box.className = 'digit-box';
+                        box.innerHTML = `
+                            <div>Digit ${index + 1}</div>
+                            <div style="font-size: 24px; font-weight: bold;">${digit}</div>
+                        `;
+                        digitBoxes.appendChild(box);
+                    });
                 }
             })
             .catch(error => {

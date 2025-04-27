@@ -1,103 +1,115 @@
 # MNIST Digit Recognition Web App
 
-This project implements a web-based handwritten digit recognition system using FastAI and Flask. Users can draw digits on a canvas, and the trained model will predict the digit. The system uses a custom ResNet architecture optimized for MNIST digit recognition.
+A web application that uses FastAI and PyTorch to recognize handwritten digits from the MNIST dataset. The application features a modern web interface where users can draw digits and get real-time predictions.
 
 ## Features
 
-- Modern web interface with drawing canvas
+- Modern web interface for drawing digits
 - Real-time digit prediction
+- Support for multiple digit recognition
 - Custom ResNet architecture with residual connections
-- Advanced data augmentation for better generalization
-- Two-phase training process (main training + fine-tuning)
-- Automatic learning rate finding and scheduling
-- Model checkpointing to save the best performing model
+- Advanced data augmentation
+- Two-phase training process
+- Automatic learning rate finding
+- Model checkpointing
+- Mobile-friendly interface with touch support
 
 ## Setup
 
-1. Install the required dependencies:
+1. Clone this repository
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Prepare the MNIST dataset:
-   a. Download the MNIST dataset files from https://www.kaggle.com/datasets/hojjatk/mnist-dataset
-   b. Place the following files in the `../mnist_data` directory:
-      - train-images.idx3-ubyte
-      - train-labels.idx1-ubyte
-      - t10k-images.idx3-ubyte
-      - t10k-labels.idx1-ubyte
-   c. Run the data preparation script:
-   ```bash
-   python prepare_data.py
-   ```
-   This will organize the images into the required directory structure.
+3. Download the MNIST dataset from [Kaggle](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) and place the files in the `mnist_data` directory:
+   - `train.csv`
+   - `test.csv`
 
-3. Train the model:
+4. Train the model:
 ```bash
 python train_model.py
 ```
-   The training process includes:
-   - Automatic learning rate finding
-   - 20 epochs of initial training
-   - 10 epochs of fine-tuning
-   - Model checkpointing to save the best model
-   - Progress tracking with training and validation metrics
 
-4. Run the web application:
+5. Run the Flask application:
 ```bash
 python app.py
 ```
 
-5. Open your web browser and navigate to `http://localhost:5000` (or your server's IP address)
-
-## Usage
-
-1. Draw a digit (0-9) on the canvas using your mouse
-2. Click "Predict" to get the model's prediction
-3. Use "Clear" to erase the canvas and try another digit
+6. Access the web interface at `http://localhost:5000` or `http://<server_ip>:5000`
 
 ## Model Architecture
 
-The system uses a custom ResNet architecture specifically designed for MNIST digit recognition:
-
-- Initial convolution block with batch normalization and dropout
-- Three residual blocks with increasing channel depth
-- Global average pooling
-- Final fully connected layer with dropout
+The model uses a custom ResNet architecture with the following features:
+- Residual connections for better gradient flow
+- Batch normalization for stable training
+- Dropout layers for regularization
+- Adaptive pooling for better feature aggregation
 - Cross-entropy loss with label smoothing
 
 ## Training Process
 
-1. Data Augmentation:
-   - Rotation (±15 degrees)
-   - Zoom (up to 10%)
-   - Lighting adjustments
-   - Warping
-   - Affine transformations
+The training process includes:
+1. Data augmentation:
+   - Random rotation (±15 degrees)
+   - Random zoom (up to 10%)
+   - Random lighting changes
+   - Random warping
 
-2. Training Phases:
-   - Learning rate finding
-   - Main training (20 epochs)
+2. Two-phase training:
+   - Initial training (20 epochs)
    - Fine-tuning (10 epochs)
-   - Automatic learning rate reduction on plateau
-   - Best model checkpointing
+   - Learning rate scheduling
+   - Model checkpointing
+
+3. Automatic learning rate finding
+4. Validation monitoring
+5. Best model saving
 
 ## Project Structure
 
-- `prepare_data.py`: Script to prepare MNIST data into the required format
-- `train_model.py`: Script for training the CNN model with custom ResNet architecture
-- `app.py`: Flask web application with real-time prediction
-- `templates/index.html`: Web interface with drawing canvas
-- `mnist_model.pkl`: Trained model weights (generated after training)
+```
+mnist/                    # Main project directory
+├── app.py               # Flask web application
+├── train_model.py       # Model training script
+├── requirements.txt     # Python dependencies
+└── templates/           # Web interface templates
+    └── index.html      # Main web interface
 
-## Requirements
+mnist_data/              # Dataset directory 
+├── train.csv           # Training data
+└── test.csv            # Test data
+```
 
-See `requirements.txt` for the complete list of dependencies.
+## Multi-Digit Recognition
+
+The application now supports recognizing multiple digits in a single drawing:
+- Draw multiple digits on the canvas
+- Click 'Predict' to get predictions for all digits
+- Each digit is automatically segmented and processed
+- Predictions are displayed in order from left to right
+- Individual digit boxes show each prediction
 
 ## Notes
 
-- The model is trained on the MNIST dataset and optimized for handwritten digit recognition
-- The web interface provides a 280x280 pixel canvas for drawing
-- Input images are automatically resized and normalized before prediction
-- The model uses a batch size of 64 for stable training
-- Training progress and metrics are displayed during the training process 
+- The model is trained on the MNIST dataset, which consists of 28x28 grayscale images
+- The web interface uses HTML5 Canvas for drawing
+- The application uses FastAI's data augmentation pipeline
+- The model is saved in PyTorch format
+- The web interface is mobile-friendly and supports touch input
+
+## Web Interface
+
+1. Draw one or more digits (0-9) on the canvas
+2. Click 'Predict' to get the model's prediction
+3. Click 'Clear' to start over
+4. The prediction will show all recognized digits in order
+5. Individual digit boxes display each prediction separately
+
+## Implementation Details
+
+- The model uses a custom ResNet architecture
+- Training includes data augmentation and learning rate scheduling
+- The web interface uses HTML5 Canvas for drawing
+- Digit segmentation is handled using OpenCV
+- The application is built with Flask and FastAI 
